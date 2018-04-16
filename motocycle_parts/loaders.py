@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import MapCompose, TakeFirst, Join
+from scrapy.loader.processors import MapCompose, TakeFirst, Join, Compose
 
 
 class MegazipLoader(ItemLoader):
@@ -17,3 +17,4 @@ class MegazipCatalogLoader(ItemLoader):
     default_output_processor = TakeFirst()
 
     catalog_item_link_out = Join(separator='')
+    catalog_item_number_out = Compose(lambda v: v[-1])

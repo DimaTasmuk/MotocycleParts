@@ -14,15 +14,15 @@ class MegazipParser(Spider):
 
     def parse(self, response):
         self.check_access(response.status)
-        yield response.follow(response.css("li.manufacturers__item a::attr(href)").extract()[0], self.filter_by_model)
-        # for brand_link in response.css("li.manufacturers__item a::attr(href)").extract():
-        #     yield response.follow(brand_link, self.filter_by_model)
+        # yield response.follow(response.css("li.manufacturers__item a::attr(href)").extract()[0], self.filter_by_model)
+        for brand_link in response.css("li.manufacturers__item a::attr(href)").extract():
+            yield response.follow(brand_link, self.filter_by_model)
 
     def filter_by_model(self, response):
         self.check_access(response.status)
-        yield response.follow(response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract()[0], self.parse_model)
-        # for model_link in response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract():
-        #     yield response.follow(model_link, self.parse_model)
+        # yield response.follow(response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract()[0], self.parse_model)
+        for model_link in response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract():
+            yield response.follow(model_link, self.parse_model)
 
     def parse_model(self, response):
         self.check_access(response.status)
@@ -48,6 +48,8 @@ class MegazipParser(Spider):
         loader.add_xpath("model_code", u"//dl[@class='s-catalog__attrs']//dt[text()='Код модели']//following-sibling::dd[1]//text()")
         loader.add_xpath("region", u"//dl[@class='s-catalog__attrs']//dt[text()='Регион продаж']//following-sibling::dd[1]//text()")
         loader.add_xpath("engine_capacity", u"//dl[@class='s-catalog__attrs']//dt[text()='Объем двигателя']//following-sibling::dd[1]//text()")
+        loader.add_xpath("engine", u"//dl[@class='s-catalog__attrs']//dt[text()='Двигатель']//following-sibling::dd[1]//text()")
+        loader.add_xpath("frame", u"//dl[@class='s-catalog__attrs']//dt[text()='Рама']//following-sibling::dd[1]//text()")
         loader.add_value("items_catalog", self.get_items_catalog(response))
 
         return loader.load_item()
@@ -60,13 +62,11 @@ class MegazipParser(Spider):
             catalog_item.add_value('catalog_item_link', self.ORIGIN_LINK)
             catalog_item.add_value('catalog_item_link', item.css("a::attr(href)").extract_first())
             catalog_item.add_xpath('catalog_item_number', "../p/text()")
+            catalog_item.add_xpath('catalog_item_count', "../../td[@class='qt_in_set']/text()")
             catalog_item.add_xpath('catalog_item_price', "../../td[@class='s-catalog__items-list-prices']/p[@class='s-catalog__items-list-price']/text()")
 
             items_catalog.append(catalog_item.load_item())
         return items_catalog
-            # items_info['link'] = self.ORIGIN_LINK + item.css("a::attr(href)").extract_first()
-            # items_info['number'] = item.css("a::attr(href)").extract_first()
-            # items_info['number'] = item.css("a::attr(href)").extract_first()
 
     def check_access(self, code):
         if code == 429:

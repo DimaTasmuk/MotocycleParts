@@ -17,7 +17,9 @@ class MegazipItem(scrapy.Item):
     year = Field()
     region = Field()
     engine_capacity = Field()
+    engine = Field()
     color = Field()
+    frame = Field()
     items_catalog = Field()
 
 
@@ -25,4 +27,5 @@ class MegazipCatalogItem(scrapy.Item):
     catalog_item_name = Field()
     catalog_item_link = Field()
     catalog_item_number = Field()
+    catalog_item_count = Field()
     catalog_item_price = Field()
