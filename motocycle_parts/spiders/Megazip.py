@@ -1,5 +1,10 @@
 # coding=utf-8
-from scrapy import Spider
+import socks
+import socket
+
+from datetime import datetime
+from pip._vendor import requests
+from scrapy import Spider, Request
 from scrapy.exceptions import CloseSpider
 
 from motocycle_parts.items import MegazipItem, MegazipCatalogItem
@@ -10,23 +15,25 @@ class MegazipParser(Spider):
 
     name = "megazip"
     ORIGIN_LINK = unicode("https://www.megazip.ru")
-    start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
+    # start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
+
+    def start_requests(self):
+        self.configureNetwork()
+        urls = ['https://www.megazip.ru/zapchasti-dlya-motocyklov']
+        for url in urls:
+            yield Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        self.check_access(response.status)
         # yield response.follow(response.css("li.manufacturers__item a::attr(href)").extract()[0], self.filter_by_model)
         for brand_link in response.css("li.manufacturers__item a::attr(href)").extract():
             yield response.follow(brand_link, self.filter_by_model)
 
     def filter_by_model(self, response):
-        self.check_access(response.status)
         # yield response.follow(response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract()[0], self.parse_model)
         for model_link in response.css("ul.s-catalog__columns-list li.filtred_item a::attr(href)").extract():
             yield response.follow(model_link, self.parse_model)
 
     def parse_model(self, response):
-        self.check_access(response.status)
-
         if len(response.css("ul.part-group")) > 0:
             for part_link in response.css("li.part-group__item a.part-group__name::attr(href)").extract():
                 yield response.follow(part_link, self.parse_part)
@@ -36,7 +43,6 @@ class MegazipParser(Spider):
                 yield response.follow(model.css("a.s-catalog__body-variants-name::attr(href)").extract_first(), self.parse_model)
 
     def parse_part(self, response):
-        self.check_access(response.status)
 
         loader = MegazipLoader(item=MegazipItem(), response=response)
         loader.add_css("title", "div.s-catalog__header p.h1::text")
@@ -67,6 +73,16 @@ class MegazipParser(Spider):
 
             items_catalog.append(catalog_item.load_item())
         return items_catalog
+
+    def configureNetwork(self):
+        socks.set_default_proxy(socks.SOCKS5, "localhost", 9150)
+        socket.socket = socks.socksocket
+        self.checkIP()
+
+    def checkIP(self):
+        r = requests.get(r'http://jsonip.com')
+        ip = r.json()['ip']
+        print 'Your IP is', ip, ", time:", datetime.now()
 
     def check_access(self, code):
         if code == 429:

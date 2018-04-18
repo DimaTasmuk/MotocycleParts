@@ -15,6 +15,8 @@ SPIDER_MODULES = ['motocycle_parts.spiders']
 NEWSPIDER_MODULE = 'motocycle_parts.spiders'
 
 
+LOG_LEVEL = "INFO"
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
 
@@ -35,6 +37,12 @@ DOWNLOAD_DELAY = 8
 
 DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
 
+FEED_EXPORTERS = {
+    'jsonlines': 'motocycle_parts.exporters.MyJsonLinesItemExporter',
+    'jl': 'motocycle_parts.exporters.MyJsonLinesItemExporter',
+    'json': 'motocycle_parts.exporters.MyJsonLinesItemExporter',
+}
+
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
 
@@ -47,7 +55,7 @@ DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
 #   'Accept-Language': 'en',
 #}
 RETRY_HTTP_CODE = [500, 502, 503, 504, 408, 400, 403, 429]
-
+RETRY_TIMES = 50
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
