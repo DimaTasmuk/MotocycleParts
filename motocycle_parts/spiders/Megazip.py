@@ -4,7 +4,7 @@ import socket
 
 from datetime import datetime
 from pip._vendor import requests
-from scrapy import Spider, Request
+from scrapy import Spider
 from scrapy.exceptions import CloseSpider
 
 from motocycle_parts.items import MegazipItem, MegazipCatalogItem
@@ -15,13 +15,12 @@ class MegazipParser(Spider):
 
     name = "megazip"
     ORIGIN_LINK = unicode("https://www.megazip.ru")
-    # start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
 
-    def start_requests(self):
+    start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
+
+    def __init__(self, name=None, **kwargs):
         self.configureNetwork()
-        urls = ['https://www.megazip.ru/zapchasti-dlya-motocyklov']
-        for url in urls:
-            yield Request(url=url, callback=self.parse)
+        super(MegazipParser, self).__init__(name, **kwargs)
 
     def parse(self, response):
         # yield response.follow(response.css("li.manufacturers__item a::attr(href)").extract()[0], self.filter_by_model)
