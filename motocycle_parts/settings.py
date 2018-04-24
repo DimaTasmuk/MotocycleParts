@@ -54,7 +54,7 @@ FEED_EXPORTERS = {
 #   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 #   'Accept-Language': 'en',
 #}
-RETRY_HTTP_CODE = [500, 502, 503, 504, 408, 400, 403, 429]
+RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400, 403, 429]
 RETRY_TIMES = 50
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
