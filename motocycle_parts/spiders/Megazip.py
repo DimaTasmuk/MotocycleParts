@@ -17,9 +17,10 @@ class MegazipParser(Spider):
     ORIGIN_LINK = unicode("https://www.megazip.ru")
 
     start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
+    parsed_details = set()
 
     def __init__(self, name=None, **kwargs):
-        self.configureNetwork()
+        # self.configureNetwork()
         super(MegazipParser, self).__init__(name, **kwargs)
 
     def parse(self, response):
@@ -35,15 +36,19 @@ class MegazipParser(Spider):
     def parse_model(self, response):
         if len(response.css("ul.part-group")) > 0:
             for part_link in response.css("li.part-group__item a.part-group__name::attr(href)").extract():
-                yield response.follow(part_link, self.parse_part)
+                if part_link not in self.parsed_details:
+                    self.parsed_details.add(part_link)
+                    yield response.follow(part_link, self.parse_part)
 
         elif len(response.css("ul.s-catalog__body-variants")) > 0:
             for model in response.css("ul.s-catalog__body-variants li.s-catalog__body-variants-item.tech_row"):
                 yield response.follow(model.css("a.s-catalog__body-variants-name::attr(href)").extract_first(), self.parse_model)
 
     def parse_part(self, response):
+        link = unicode(response.url)
 
         loader = MegazipLoader(item=MegazipItem(), response=response)
+        loader.add_value('link', link)
         loader.add_css("title", "div.s-catalog__header p.h1::text")
         loader.add_value("image_link", self.ORIGIN_LINK)
         loader.add_value("image_link", response.css("img.s-catalog__items-image-group::attr(src)").extract_first())

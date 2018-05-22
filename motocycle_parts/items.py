@@ -10,6 +10,7 @@ from scrapy import Field
 
 
 class MegazipItem(scrapy.Item):
+    link = Field()
     title = Field()
     model = Field()
     model_code = Field()
