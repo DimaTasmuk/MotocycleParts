@@ -12,9 +12,14 @@ class MegazipLoader(ItemLoader):
     items_catalog_out = MapCompose()
 
 
+def replace_space(number):
+    return number[0].replace(" ", "")
+
+
 class MegazipCatalogLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = TakeFirst()
 
     catalog_item_link_out = Join(separator='')
     catalog_item_number_out = Compose(lambda v: v[-1])
+    catalog_item_price_out = Compose(replace_space)

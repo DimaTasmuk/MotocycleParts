@@ -1,11 +1,5 @@
 # coding=utf-8
-import socks
-import socket
-
-from datetime import datetime
-from pip._vendor import requests
 from scrapy import Spider
-from scrapy.exceptions import CloseSpider
 
 from motocycle_parts.items import MegazipItem, MegazipCatalogItem
 from motocycle_parts.loaders import MegazipLoader, MegazipCatalogLoader
@@ -18,10 +12,6 @@ class MegazipParser(Spider):
 
     start_urls = ["https://www.megazip.ru/zapchasti-dlya-motocyklov"]
     parsed_details = set()
-
-    def __init__(self, name=None, **kwargs):
-        # self.configureNetwork()
-        super(MegazipParser, self).__init__(name, **kwargs)
 
     def parse(self, response):
         # yield response.follow(response.css("li.manufacturers__item a::attr(href)").extract()[0], self.filter_by_model)
@@ -52,42 +42,27 @@ class MegazipParser(Spider):
         loader.add_css("title", "div.s-catalog__header p.h1::text")
         loader.add_value("image_link", self.ORIGIN_LINK)
         loader.add_value("image_link", response.css("img.s-catalog__items-image-group::attr(src)").extract_first())
-        loader.add_xpath("year", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted']//dt[text()='Год']//following-sibling::dd[1]//text()")
-        loader.add_xpath("color", u"//dl[@class='s-catalog__attrs']//dt[text()='Цвет']//following-sibling::dd[1]//text()")
-        loader.add_xpath("model", u"//dl[@class='s-catalog__attrs']//dt[text()='Модель']//following-sibling::dd[1]//text()")
-        loader.add_xpath("model_code", u"//dl[@class='s-catalog__attrs']//dt[text()='Код модели']//following-sibling::dd[1]//text()")
-        loader.add_xpath("region", u"//dl[@class='s-catalog__attrs']//dt[text()='Регион продаж']//following-sibling::dd[1]//text()")
-        loader.add_xpath("engine_capacity", u"//dl[@class='s-catalog__attrs']//dt[text()='Объем двигателя']//following-sibling::dd[1]//text()")
-        loader.add_xpath("engine", u"//dl[@class='s-catalog__attrs']//dt[text()='Двигатель']//following-sibling::dd[1]//text()")
-        loader.add_xpath("frame", u"//dl[@class='s-catalog__attrs']//dt[text()='Рама']//following-sibling::dd[1]//text()")
+        loader.add_xpath("year", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Год']//following-sibling::dd[1]//text()")
+        loader.add_xpath("color", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Цвет']//following-sibling::dd[1]//text()")
+        loader.add_xpath("color_variant", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Вариант окраса']//following-sibling::dd[1]//text()")
+        loader.add_xpath("model", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Модель']//following-sibling::dd[1]//text()")
+        loader.add_xpath("model_code", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Код модели']//following-sibling::dd[1]//text()")
+        loader.add_xpath("region", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Регион продаж']//following-sibling::dd[1]//text()")
+        loader.add_xpath("engine_capacity", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Объем двигателя']//following-sibling::dd[1]//text()")
+        loader.add_xpath("engine", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Двигатель']//following-sibling::dd[1]//text()")
+        loader.add_xpath("frame", u"//dl[@class='s-catalog__attrs s-catalog__attrs_type_dotted' or @class='s-catalog__attrs']//dt[text()='Рама']//following-sibling::dd[1]//text()")
         loader.add_value("items_catalog", self.get_items_catalog(response))
-
         return loader.load_item()
 
     def get_items_catalog(self, response):
         items_catalog = []
-        for item in response.xpath("//table[@class='s-catalog__items-list-table']/tbody[@class='s-catalog__items-list-table-body']/tr/td[@class='spare_name']/a[@class='price-link']"):
+        for item in response.xpath("//table[@class='items-list']/tbody/tr[contains(@class,'items-list__row')]/td[contains(@class, 'items-list__cell_type_description')]/a[@class='items-list__name']"):
             catalog_item = MegazipCatalogLoader(item=MegazipCatalogItem(), selector=item)
-            catalog_item.add_css('catalog_item_name', "a::text")
+            catalog_item.add_xpath('catalog_item_name', "../../td[contains(@class, 'items-list__cell_type_description')]/*[@class='items-list__name']/text()")
             catalog_item.add_value('catalog_item_link', self.ORIGIN_LINK)
-            catalog_item.add_value('catalog_item_link', item.css("a::attr(href)").extract_first())
-            catalog_item.add_xpath('catalog_item_number', "../p/text()")
-            catalog_item.add_xpath('catalog_item_count', "../../td[@class='qt_in_set']/text()")
-            catalog_item.add_xpath('catalog_item_price', "../../td[@class='s-catalog__items-list-prices']/p[@class='s-catalog__items-list-price']/text()")
+            catalog_item.add_value('catalog_item_link', item.xpath("../../td[contains(@class, 'items-list__cell_type_description')]/a[@class='items-list__name']/@href").extract_first())
+            catalog_item.add_xpath('catalog_item_number', "../../td[contains(@class, 'items-list__cell_type_number')]/p[@class='items-list__number']/text()")
+            catalog_item.add_xpath('catalog_item_price', "../../td[contains(@class, 'items-list__cell_type_price')]/p[@class='items-list__price']/text()", re="[0-9]+(?: )+[0-9]*")
 
             items_catalog.append(catalog_item.load_item())
         return items_catalog
-
-    def configureNetwork(self):
-        socks.set_default_proxy(socks.SOCKS5, "localhost", 9150)
-        socket.socket = socks.socksocket
-        self.checkIP()
-
-    def checkIP(self):
-        r = requests.get(r'http://jsonip.com')
-        ip = r.json()['ip']
-        print 'Your IP is', ip, ", time:", datetime.now()
-
-    def check_access(self, code):
-        if code == 429:
-            raise CloseSpider("cancelled (doesn't access)")
